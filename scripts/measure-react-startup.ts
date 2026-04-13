@@ -159,7 +159,7 @@ async function waitForFirstReactShellFetch(
       const body = await response.text();
       if (
         response.ok &&
-        body.includes('<div id="root"></div>') &&
+        body.includes('<div id="root">') &&
         body.includes('<script type="module"')
       ) {
         return {
