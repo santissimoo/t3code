@@ -151,6 +151,53 @@ export function buildServerProvider(input: {
   };
 }
 
+export function makePendingProviderSnapshot(input: {
+  provider: ServerProvider["provider"];
+  displayName: string;
+  builtInModels: ReadonlyArray<ServerProviderModel>;
+  customModels: ReadonlyArray<string>;
+  defaultCapabilities: ModelCapabilities;
+  enabled: boolean;
+}): ServerProvider {
+  const checkedAt = new Date().toISOString();
+  const models = providerModelsFromSettings(
+    input.builtInModels,
+    input.provider,
+    input.customModels,
+    input.defaultCapabilities,
+  );
+
+  if (!input.enabled) {
+    return buildServerProvider({
+      provider: input.provider,
+      enabled: false,
+      checkedAt,
+      models,
+      probe: {
+        installed: false,
+        version: null,
+        status: "warning",
+        auth: { status: "unknown" },
+        message: `${input.displayName} is disabled in T3 Code settings.`,
+      },
+    });
+  }
+
+  return buildServerProvider({
+    provider: input.provider,
+    enabled: true,
+    checkedAt,
+    models,
+    probe: {
+      installed: false,
+      version: null,
+      status: "warning",
+      auth: { status: "unknown" },
+      message: `${input.displayName} provider status has not been checked in this session yet.`,
+    },
+  });
+}
+
 export const collectStreamAsString = <E>(
   stream: Stream.Stream<Uint8Array, E>,
 ): Effect.Effect<string, E> =>

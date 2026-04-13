@@ -28,6 +28,7 @@ import {
   detailFromResult,
   extractAuthBoolean,
   isCommandMissingCause,
+  makePendingProviderSnapshot,
   parseGenericCliVersion,
   providerModelsFromSettings,
   spawnAndCollect,
@@ -552,45 +553,15 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(fu
   });
 });
 
-const makePendingCodexProvider = (codexSettings: CodexSettings): ServerProvider => {
-  const checkedAt = new Date().toISOString();
-  const models = providerModelsFromSettings(
-    BUILT_IN_MODELS,
-    PROVIDER,
-    codexSettings.customModels,
-    DEFAULT_CODEX_MODEL_CAPABILITIES,
-  );
-
-  if (!codexSettings.enabled) {
-    return buildServerProvider({
-      provider: PROVIDER,
-      enabled: false,
-      checkedAt,
-      models,
-      probe: {
-        installed: false,
-        version: null,
-        status: "warning",
-        auth: { status: "unknown" },
-        message: "Codex is disabled in T3 Code settings.",
-      },
-    });
-  }
-
-  return buildServerProvider({
+const makePendingCodexProvider = (codexSettings: CodexSettings): ServerProvider =>
+  makePendingProviderSnapshot({
     provider: PROVIDER,
-    enabled: true,
-    checkedAt,
-    models,
-    probe: {
-      installed: false,
-      version: null,
-      status: "warning",
-      auth: { status: "unknown" },
-      message: "Codex provider status has not been checked in this session yet.",
-    },
+    displayName: "Codex",
+    builtInModels: BUILT_IN_MODELS,
+    customModels: codexSettings.customModels,
+    defaultCapabilities: DEFAULT_CODEX_MODEL_CAPABILITIES,
+    enabled: codexSettings.enabled,
   });
-};
 
 export const CodexProviderLive = Layer.effect(
   CodexProvider,

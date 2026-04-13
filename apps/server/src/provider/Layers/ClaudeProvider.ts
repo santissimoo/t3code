@@ -21,6 +21,7 @@ import {
   detailFromResult,
   extractAuthBoolean,
   isCommandMissingCause,
+  makePendingProviderSnapshot,
   parseGenericCliVersion,
   providerModelsFromSettings,
   spawnAndCollect,
@@ -663,45 +664,15 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
   });
 });
 
-const makePendingClaudeProvider = (claudeSettings: ClaudeSettings): ServerProvider => {
-  const checkedAt = new Date().toISOString();
-  const models = providerModelsFromSettings(
-    BUILT_IN_MODELS,
-    PROVIDER,
-    claudeSettings.customModels,
-    DEFAULT_CLAUDE_MODEL_CAPABILITIES,
-  );
-
-  if (!claudeSettings.enabled) {
-    return buildServerProvider({
-      provider: PROVIDER,
-      enabled: false,
-      checkedAt,
-      models,
-      probe: {
-        installed: false,
-        version: null,
-        status: "warning",
-        auth: { status: "unknown" },
-        message: "Claude is disabled in T3 Code settings.",
-      },
-    });
-  }
-
-  return buildServerProvider({
+const makePendingClaudeProvider = (claudeSettings: ClaudeSettings): ServerProvider =>
+  makePendingProviderSnapshot({
     provider: PROVIDER,
-    enabled: true,
-    checkedAt,
-    models,
-    probe: {
-      installed: false,
-      version: null,
-      status: "warning",
-      auth: { status: "unknown" },
-      message: "Claude provider status has not been checked in this session yet.",
-    },
+    displayName: "Claude",
+    builtInModels: BUILT_IN_MODELS,
+    customModels: claudeSettings.customModels,
+    defaultCapabilities: DEFAULT_CLAUDE_MODEL_CAPABILITIES,
+    enabled: claudeSettings.enabled,
   });
-};
 
 export const ClaudeProviderLive = Layer.effect(
   ClaudeProvider,
