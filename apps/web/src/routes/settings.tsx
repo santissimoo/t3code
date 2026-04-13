@@ -3,10 +3,6 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { StartupPendingSurface } from "../components/StartupPendingSurface";
-import {
-  ensurePrimaryEnvironmentReady,
-  resolveInitialServerAuthGateState,
-} from "../environments/primary";
 import { useSettingsRestore } from "../components/settings/SettingsPanels";
 import { Button } from "../components/ui/button";
 import { SidebarInset, SidebarTrigger } from "../components/ui/sidebar";
@@ -57,7 +53,7 @@ function SettingsContentLayout() {
         )}
 
         {isElectron && (
-          <div className="drag-region flex h-[52px] shrink-0 items-center border-b border-border px-5">
+          <div className="drag-region flex h-[52px] shrink-0 items-center border-b border-border px-5 wco:h-[env(titlebar-area-height)] wco:pr-[calc(100vw-env(titlebar-area-width)-env(titlebar-area-x)+1em)]">
             <span className="text-xs font-medium tracking-wide text-muted-foreground/70">
               Settings
             </span>
@@ -88,12 +84,8 @@ function SettingsRouteLayout() {
 }
 
 export const Route = createFileRoute("/settings")({
-  beforeLoad: async ({ location }) => {
-    const [, authGateState] = await Promise.all([
-      ensurePrimaryEnvironmentReady(),
-      resolveInitialServerAuthGateState(),
-    ]);
-    if (authGateState.status !== "authenticated") {
+  beforeLoad: async ({ context, location }) => {
+    if (context.authGateState.status !== "authenticated") {
       throw redirect({ to: "/pair", replace: true });
     }
 
@@ -106,10 +98,5 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsRoutePendingView() {
-  return (
-    <StartupPendingSurface
-      title="Connecting to T3 Server"
-      detail="Connecting to the local server before loading server and editor settings."
-    />
-  );
+  return <StartupPendingSurface />;
 }
